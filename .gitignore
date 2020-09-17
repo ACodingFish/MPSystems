@@ -1,0 +1,9 @@
+/Project1/MPSystemsProject/Debug/*
+/Project1/MPSystemsProject/Drivers/*
+/Project1/MPSystemsProject/.settings/*
+/Project1/MPSystemsProject/startup/*
+/Project1/MPSystemsProject/.cproject
+/Project1/MPSystemsProject/.mxproject
+/Project1/MPSystemsProject/.project
+/Project1/MPSystemsProject/*.elf.launch
+/Project1/MPSystemsProject/*.ld
