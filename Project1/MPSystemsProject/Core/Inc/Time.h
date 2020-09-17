@@ -7,8 +7,11 @@
 #ifdef ENABLE_US_PRECISION
 	#define SYSTEM_TICK_US_DEFINITION 1000000ULL
 	#define	MS_TO_US_VAL 1000ULL
+	#define MS(x) (x*MS_TO_US_VAL)
 #else
 	#define SYSTEM_TICK_US_DEFINITION 1000ULL
+	#define TICKS_PER_MS 1
+	#define MS(x) (x)
 #endif
 
 void Time_Init();

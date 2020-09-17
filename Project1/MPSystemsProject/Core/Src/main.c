@@ -18,12 +18,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <stdint.h>
 #include "main.h"
-#include "Time.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdint.h>
+#include "Time.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BUTTON_DEBOUNCE_TIME_MS MS(100)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -79,6 +80,7 @@ int main(void)
 
   /* Configure the system clock */
   SystemClock_Config();
+
   /* USER CODE BEGIN SysInit */
   SysTick_Config(SystemCoreClock/SYSTEM_TICK_US_DEFINITION);
   Time_Init();
@@ -183,14 +185,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PC13 PC14 PC15 PC0
-                           PC1 PC2 PC3 PC4
-                           PC5 PC6 PC7 PC8
-                           PC9 PC10 PC11 PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0
-                          |GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4
-                          |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8
-                          |GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
+  /*Configure GPIO pin : Button_Pin */
+  GPIO_InitStruct.Pin = Button_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(Button_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC14 PC15 PC0 PC1
+                           PC2 PC3 PC4 PC5
+                           PC6 PC7 PC8 PC9
+                           PC10 PC11 PC12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
+                          |GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9
+                          |GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -203,12 +211,10 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PA0 PA1 PA2 PA5
                            PA6 PA7 PA8 PA9
-                           PA10 PA11 PA12 PA13
-                           PA14 PA15 */
+                           PA10 PA11 PA12 PA15 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_5
                           |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9
-                          |GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13
-                          |GPIO_PIN_14|GPIO_PIN_15;
+                          |GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -244,10 +250,30 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
 }
 
 /* USER CODE BEGIN 4 */
+Tick exti_14_callback_time = 0;
 
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	switch (GPIO_Pin)
+	{
+		case (1<<13):
+			if (GetTimeSince_ms(exti_14_callback_time) > BUTTON_DEBOUNCE_TIME_MS)
+			{
+				HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+				exti_14_callback_time = GetTime_ms();
+			}
+			break;
+		default:
+			break;
+	}
+}
 /* USER CODE END 4 */
 
 /**
