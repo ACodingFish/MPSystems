@@ -1,4 +1,6 @@
 /* USER CODE BEGIN Header */
+#include <stdint.h>
+#include "Time.h"
 /**
   ******************************************************************************
   * @file    stm32l4xx_it.c
@@ -182,7 +184,7 @@ void PendSV_Handler(void)
 void SysTick_Handler(void)
 {
   /* USER CODE BEGIN SysTick_IRQn 0 */
-
+	IncrementTick();
   /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
   /* USER CODE BEGIN SysTick_IRQn 1 */
