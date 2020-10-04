@@ -62,8 +62,29 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-#define PWM_STEP_NUM 8
-int TIM2_CH1_DC[PWM_STEP_NUM] = {1,50,70,90,99,80,60};
+//#define HW1_PART_A
+//#define HW1_PART_B
+#define HW1_PART_C
+
+#define PWM_DC_ARR (39999+1)
+
+#if defined(HW1_PART_A)
+	#define BLINK_PERIOD 1000
+	#define PWM_STEP_NUM 1
+	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {50};
+#elif defined(HW1_PART_B)
+	#define BLINK_PERIOD 1000
+	#define PWM_STEP_NUM 8
+	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {0,50,70,90,100,80,60};
+#elif defined(HW1_PART_C)
+	#define BLINK_PERIOD 50
+	#define PWM_MAX_DC 100
+	#define PWM_MIN_DC 0
+	uint8_t PWM_val = 0;
+	uint8_t ignition_flag = 0;
+#else
+	#define BLINK_PERIOD 1000
+#endif
 int pwm_step_count = 0;
 
 /* USER CODE END 0 */
@@ -112,15 +133,37 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if ((GetTimeSince_ms(blink_timer))>1000)
+
+	  if ((GetTimeSince_ms(blink_timer))>BLINK_PERIOD)
 	  {
+#if defined(HW1_PART_A) || defined(HW1_PART_B)
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
 		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3);
 		  blink_timer = GetTime_ms();
-		  TIM2->CCR1 = TIM2_CH1_DC[pwm_step_count];
+		  TIM2->CCR1 = TIM2_CH1_DC[pwm_step_count]*PWM_DC_ARR/100;
 		  pwm_step_count++;
 		  pwm_step_count %= PWM_STEP_NUM;
+#elif defined(HW1_PART_C)
+		  if ((ignition_flag >0))
+		  {
+			  if (PWM_val <= PWM_MAX_DC)
+			  {
+				  PWM_val+=1;
+				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100;
+			  }
+
+		  } else
+		  {
+			  if (PWM_val >0)
+			  {
+				  PWM_val -=1;
+				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100;
+			  }
+		  }
+		  blink_timer = GetTime_ms();
+#endif
 	  }
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -233,7 +276,7 @@ static void MX_TIM2_Init(void)
   htim2.Instance = TIM2;
   htim2.Init.Prescaler = 0;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 400;
+  htim2.Init.Period = 39999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -413,11 +456,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			WiFi_Recieve();
 			break;
 		case (1<<13):
+#if defined(HW1_PART_C)
+			if (GetTimeSince_ms(exti_13_callback_time) > BUTTON_DEBOUNCE_TIME_MS)
+			{
+				ignition_flag ^= 0x01; // toggle ignition
+				exti_13_callback_time = GetTime_ms();
+			}
+#else
 			if (GetTimeSince_ms(exti_13_callback_time) > BUTTON_DEBOUNCE_TIME_MS)
 			{
 				HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
 				exti_13_callback_time = GetTime_ms();
 			}
+#endif
 			break;
 		default:
 			break;
