@@ -1,5 +1,22 @@
 /* USER CODE BEGIN Header */
 /**
+ * *****************************************************************************
+ * Name: Jonathan Dean
+ * Assignment: #1
+ * Program Summary:
+ * Using different initialization conditions (using preprocessor directives),
+ * I change between the project for Parts A, B, and C. I set the onboard LED
+ * to a PWM with a period of 10 ms using STM32CubeMX. I change this value from
+ * an array for Parts A and B.
+ *
+ * Part C represents an ignition button for a PWM-driven wheel motor
+ * (represented here by LED brightness). When the button is pressed, the PWM
+ * gradually changes up to the max “speed” (PWM value). When the button is
+ * pressed again, the PWM gradually reduces the motor’s speed (PWM value)
+ * until the motor comes to a halt (at a value of 0).
+ * *****************************************************************************
+ */
+/**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
@@ -23,8 +40,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
-#include "Time.h"
-#include "WiFi.h"
+#include "Time.h" // Custom Time Library
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -62,6 +78,7 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+/*	Preprocessor directives and variables for HW1	*/
 //#define HW1_PART_A
 //#define HW1_PART_B
 #define HW1_PART_C
@@ -69,24 +86,26 @@ static void MX_TIM2_Init(void);
 #define PWM_DC_ARR (39999+1)
 
 #if defined(HW1_PART_A)
-	#define BLINK_PERIOD 1000
-	#define PWM_STEP_NUM 1
-	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {50};
+	#define BLINK_PERIOD MS(1000) 				// blink period (for updates), pseudo-irrelevant in this case.
+	#define PWM_STEP_NUM 1 						// number of steps in the PWM DC array
+	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {50}; 	// PWM DC Array
+	int pwm_step_count = 0;						// keeps track of PWM Step count in array
 #elif defined(HW1_PART_B)
-	#define BLINK_PERIOD 1000
-	#define PWM_STEP_NUM 8
-	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {0,50,70,90,100,80,60};
+	#define BLINK_PERIOD MS(1000) 				// blink period (for updates)
+	#define PWM_STEP_NUM 8						// number of steps in the PWM DC array
+	uint8_t TIM2_CH1_DC[PWM_STEP_NUM] = {0,50,70,90,100,80,60}; 	// PWM DC Array
+	int pwm_step_count = 0;						// keeps track of PWM Step count in array
 #elif defined(HW1_PART_C)
-	#define BLINK_PERIOD 50
-	#define PWM_MAX_DC 100
-	#define PWM_MIN_DC 0
-	uint8_t PWM_val = 0;
-	uint8_t ignition_flag = 0;
+	#define BLINK_PERIOD MS(50)					// blink period (for updates)
+	#define PWM_MAX_DC 100						// Maximum DC Value (0-100%)
+	#define PWM_MIN_DC 0						// Minimum DC Value (0-100%)
+	uint8_t PWM_val = 0;						// Keeps track of PWM DC
+	uint8_t ignition_flag = 0;					// Tracks Ignition related flags (on/off in this case)
 #else
-	#define BLINK_PERIOD 1000
+	#define BLINK_PERIOD MS(1000)				// blink period (for updates)
 #endif
-int pwm_step_count = 0;
 
+/*	End Preprocessor directives and variables for HW1	*/
 /* USER CODE END 0 */
 
 /**
@@ -112,8 +131,8 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-  SysTick_Config(SystemCoreClock/SYSTEM_TICK_US_DEFINITION);
-  Time_Init();
+  SysTick_Config(SystemCoreClock/SYSTEM_TICK_US_DEFINITION); // set up SysTick
+  Time_Init(); // initialize timer
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -121,12 +140,11 @@ int main(void)
   MX_SPI3_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-  WiFi_Init(&hspi3);
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1); // start pwm timer
 
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // set initial LED states
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
-  Tick blink_timer = GetTime_ms();
+  Tick blink_timer = GetTime_ms(); // initialize timer
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -134,33 +152,37 @@ int main(void)
   while (1)
   {
 
-	  if ((GetTimeSince_ms(blink_timer))>BLINK_PERIOD)
+	  if ((GetTimeSince_ms(blink_timer))>BLINK_PERIOD) // if the PWM should change
 	  {
 #if defined(HW1_PART_A) || defined(HW1_PART_B)
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
-		  HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_3);
-		  blink_timer = GetTime_ms();
-		  TIM2->CCR1 = TIM2_CH1_DC[pwm_step_count]*PWM_DC_ARR/100;
-		  pwm_step_count++;
-		  pwm_step_count %= PWM_STEP_NUM;
+		  TIM2->CCR1 = TIM2_CH1_DC[pwm_step_count]*PWM_DC_ARR/100; // Set DC
+		  pwm_step_count++;	// Increment PWM Step
+		  pwm_step_count %= PWM_STEP_NUM; // Make sure that we are not out of bounds
+		  blink_timer = GetTime_ms(); // Reset Timer
 #elif defined(HW1_PART_C)
-		  if ((ignition_flag >0))
+		  if ((ignition_flag >0)) // if the ignition is on
 		  {
-			  if (PWM_val <= PWM_MAX_DC)
+			  if (PWM_val <= PWM_MAX_DC) // if the PWM
 			  {
-				  PWM_val+=1;
-				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100;
+				  PWM_val+=1; // Increase "speed"
+				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100; // set DC
+			  } else
+			  {
+				  // do nothing, we are at max speed
 			  }
 
 		  } else
 		  {
-			  if (PWM_val >0)
+			  if (PWM_val > PWM_MIN_DC)
 			  {
-				  PWM_val -=1;
-				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100;
+				  PWM_val -=1; // Decrease "Speed"
+				  TIM2->CCR1 = PWM_val*PWM_DC_ARR/100; // set DC
+			  } else
+			  {
+				  //do nothing, we are stopped
 			  }
 		  }
-		  blink_timer = GetTime_ms();
+		  blink_timer = GetTime_ms(); // Reset timer
 #endif
 	  }
 
@@ -452,12 +474,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	switch (GPIO_Pin)
 	{
-		case (1<<1):
-			WiFi_Recieve();
-			break;
 		case (1<<13):
 #if defined(HW1_PART_C)
-			if (GetTimeSince_ms(exti_13_callback_time) > BUTTON_DEBOUNCE_TIME_MS)
+			if (GetTimeSince_ms(exti_13_callback_time) > BUTTON_DEBOUNCE_TIME_MS) // button debouncing
 			{
 				ignition_flag ^= 0x01; // toggle ignition
 				exti_13_callback_time = GetTime_ms();
@@ -465,7 +484,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 #else
 			if (GetTimeSince_ms(exti_13_callback_time) > BUTTON_DEBOUNCE_TIME_MS)
 			{
-				HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);
+				HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_4);// code from last week
 				exti_13_callback_time = GetTime_ms();
 			}
 #endif
