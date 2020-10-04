@@ -25,3 +25,6 @@ make decrease the user’s wait time.
 ## Part C
 Goal: Emulate a motor that drives when a button is pressed and smoothly comes to a stop when the
 button is pressed again. The motor’s speed is represented by the onboard LED’s brightness.
+
+## Github Link
+https://github.com/TTU-Jon/MPSystems/tree/master/Project1/Assignment1
