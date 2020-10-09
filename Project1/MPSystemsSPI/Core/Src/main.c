@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 #include "stm32l475e_iot01_tsensor.h"
 #include "stm32l475e_iot01_hsensor.h"
+#include "wifi.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -113,6 +114,23 @@ int main(void)
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   /* USER CODE BEGIN 2 */
+  /*if (WIFI_Init() == WIFI_STATUS_OK)
+  {
+  // Remember not to commit this with actual credentials
+	  if (WIFI_Connect("SSID","PASS",WIFI_ECN_WPA2_PSK) != WIFI_STATUS_OK)
+	  {
+		  uint8_t TARGET_IP[4] = {XXX,XXX,XXX,XXX};
+		  if (WIFI_OpenClientConnection(SOC_NUMBER, WIFI_TCP_PROTOCOL, "XXXXXXX", TARGET_IP, PORT, L_PORT) == WIFI_STATUS_OK)
+		  {
+
+		  }
+	  }
+  }
+  else
+  {
+	// Wifi Failed to Initialize
+  }*/
+
   if (BSP_TSENSOR_Init() != TSENSOR_OK)
   {
 	  //Temperature sensor failed to initialize...
