@@ -143,6 +143,9 @@ int main(void)
   SensorInit(STAccelerometerX);
   SensorInit(STAccelerometerY);
   SensorInit(STAccelerometerZ);
+  //SensorInit(STGyroscopeX);
+  //SensorInit(STGyroscopeY);
+  //SensorInit(STGyroscopeZ);
   EnableSensor(STTemperature);
   EnableSensor(STHumidity);
 
@@ -724,6 +727,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				ToggleSensor(STAccelerometerX);
 				ToggleSensor(STAccelerometerY);
 				ToggleSensor(STAccelerometerZ);
+				ToggleSensor(STGyroscopeX);
+				ToggleSensor(STGyroscopeY);
+				ToggleSensor(STGyroscopeZ);
 				button_debounce_time = GetTime_ms();
 			}
 

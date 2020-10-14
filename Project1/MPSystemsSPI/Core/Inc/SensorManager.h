@@ -3,11 +3,16 @@
 
 typedef enum SensorType
 {
-	STTemperature,
+	STTemperature = 0x0,
 	STHumidity,
 	STAccelerometerX,
 	STAccelerometerY,
 	STAccelerometerZ,
+	STGyroscopeX,
+	STGyroscopeY,
+	STGyroscopeZ,
+	STNumSensors,
+	STNoParent,
 } SensorType_t;
 
 void SensorInit(SensorType_t sensor);
