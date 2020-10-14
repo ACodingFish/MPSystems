@@ -22,9 +22,11 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stm32l475e_iot01_tsensor.h"
-#include "stm32l475e_iot01_hsensor.h"
+#include <stdint.h>
+#include "Time.h" // Custom Time Library"
 #include "wifi.h"
+#include "DebugUART.h"
+#include "Sensors.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,6 +36,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BUTTON_DEBOUNCE_TIME_MS MS(100)
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -52,6 +55,7 @@ SPI_HandleTypeDef hspi3;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart1_tx;
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
@@ -62,6 +66,7 @@ PCD_HandleTypeDef hpcd_USB_OTG_FS;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_DFSDM1_Init(void);
 static void MX_I2C2_Init(void);
 static void MX_QUADSPI_Init(void);
@@ -101,11 +106,12 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  Time_Init(); // initialize timer
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_DFSDM1_Init();
   MX_I2C2_Init();
   MX_QUADSPI_Init();
@@ -130,16 +136,13 @@ int main(void)
   {
 	// Wifi Failed to Initialize
   }*/
+  DebugUARTInit(&huart1); // initialize uart debug readout
 
-  if (BSP_TSENSOR_Init() != TSENSOR_OK)
-  {
-	  //Temperature sensor failed to initialize...
-  }
+  SensorInit(STTemperature);
+  SensorInit(STHumidity);
+  EnableSensor(STTemperature);
+  EnableSensor(STHumidity);
 
-  if (BSP_HSENSOR_Init() != HSENSOR_OK)
-  {
-	  //Humidity sensor failed to initialize...
-  }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -149,8 +152,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  float temp_read = BSP_TSENSOR_ReadTemp();
-	  float hum_read = BSP_HSENSOR_ReadHumidity();
+
+	  SensorTask();
+
   }
   /* USER CODE END 3 */
 }
@@ -494,6 +498,22 @@ static void MX_USB_OTG_FS_PCD_Init(void)
 }
 
 /**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel4_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel4_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel4_IRQn);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -688,7 +708,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+Tick button_debounce_time = 0; // exti13
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	switch (GPIO_Pin)
+	{
+		case (1<<13):
+			if (GetTimeSince_ms(button_debounce_time) > BUTTON_DEBOUNCE_TIME_MS) // button debouncing
+			{
+				ToggleSensor(STTemperature);
+				ToggleSensor(STHumidity);
+				ToggleSensor(STAccelerometerX);
+				ToggleSensor(STAccelerometerY);
+				ToggleSensor(STAccelerometerZ);
+				button_debounce_time = GetTime_ms();
+			}
 
+			break;
+		default:
+			break;
+	}
+}
 /* USER CODE END 4 */
 
 /**
