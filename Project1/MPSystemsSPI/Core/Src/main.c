@@ -23,10 +23,10 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
+#include "SensorManager.h"
 #include "Time.h" // Custom Time Library"
 #include "wifi.h"
 #include "DebugUART.h"
-#include "Sensors.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -140,6 +140,9 @@ int main(void)
 
   SensorInit(STTemperature);
   SensorInit(STHumidity);
+  SensorInit(STAccelerometerX);
+  SensorInit(STAccelerometerY);
+  SensorInit(STAccelerometerZ);
   EnableSensor(STTemperature);
   EnableSensor(STHumidity);
 
