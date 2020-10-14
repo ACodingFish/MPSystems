@@ -1,5 +1,13 @@
 /* USER CODE BEGIN Header */
 /**
+ * *****************************************************************************
+ * Name: Jonathan Dean
+ * Assignment: #2
+ * Program Summary:
+ * This program reads Temperature and Humidity values. When a button is pressed
+ * (PC13), the program switches to reading Accelerometer values. When pressed
+ * again, it switches back to reading Temperature and Humidity.
+ * *****************************************************************************
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
