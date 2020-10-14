@@ -23,4 +23,4 @@ Videos can be seen in the "Videos" folder under Assignment1 Directory.
 	>CommsDrivers
   
 ## Github Link
-https://github.com/TTU-Jon/MPSystems/tree/master/Project1/Assignment2
+https://github.com/ACodingFish/MPSystems/tree/master/Project1/Assignment2
