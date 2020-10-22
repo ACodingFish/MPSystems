@@ -1,15 +1,9 @@
-# Assignment 2
+# Pedometer Demo
 
-Date: 10/14/2020
-
+Date: 10/22/2020
 ## Project Description:
 
-Part A: Read Temperature Data
-Part B: Read Accelerometer Data
-Part C: Switch between reading Temperature and Accelerometer Data By Pushing a Button (PC13)
-
-## Videos
-Videos can be seen in the "Videos" folder under Assignment1 Directory.
+This project is a step counter. It emulates a pedometer using the accelerometer.
 
 ## Setup
 * Generate the Project using STM32CubeMX
@@ -21,6 +15,3 @@ Videos can be seen in the "Videos" folder under Assignment1 Directory.
 * C/C++ General>Paths and Symbols>Includes>Add Folder...
 	>SensorDrivers
 	>CommsDrivers
-  
-## Github Link
-https://github.com/ACodingFish/MPSystems/tree/master/Project1/Assignment2
