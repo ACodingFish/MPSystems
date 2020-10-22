@@ -15,9 +15,10 @@
 #define SENSOR_CHK_FLAG(mask, x) ((mask & (0x01<<x))>0)
 
 bool SensorEnabled(SensorType_t sensor);
+void SensorPrintData(void);
 
 
-#define SENSOR_TIMER_DELAY MS(1000)
+#define SENSOR_TIMER_DELAY MS(100)
 
 uint32_t SENSOR_MASK = 0x0;
 uint32_t SENSOR_INIT_MASK = 0x0;
@@ -33,18 +34,20 @@ typedef struct Sensor
 	char name[10];
 	uint32_t (*init)(void);
 	uint32_t INIT_OK;
+	Tick timer;
+	Tick delay;
 } Sensor_t;
 
 Sensor_t sensors[STNumSensors] =
 {
-		{STTemperature, STNoParent,BSP_TSENSOR_ReadTemp, 0.0,"Temp", BSP_TSENSOR_Init, TSENSOR_OK},
-		{STHumidity, STNoParent, BSP_HSENSOR_ReadHumidity, 0.0, "Humidity", BSP_HSENSOR_Init, HSENSOR_OK},
-		{STAccelerometerX, STNoParent, AccelReadX, 0.0,"Accel X", AccelInit, ACCEL_OK},
-		{STAccelerometerY, STAccelerometerX, AccelReadY, 0.0, "Accel Y", AccelInit, ACCEL_OK},
-		{STAccelerometerZ, STAccelerometerY, AccelReadZ, 0.0, "Accel Z", AccelInit, ACCEL_OK},
-		{STGyroscopeX, STNoParent, GyroReadX, 0.0,"Gyro X", GyroInit, GYR_OK},
-		{STGyroscopeY, STGyroscopeX, GyroReadY, 0.0, "Gyro Y", GyroInit, GYR_OK},
-		{STGyroscopeZ, STGyroscopeY, GyroReadZ, 0.0, "Gyro Z", GyroInit, GYR_OK},
+		{STTemperature, STNoParent,BSP_TSENSOR_ReadTemp, 0.0,"Temp", BSP_TSENSOR_Init, TSENSOR_OK, 0, MS(1000)},
+		{STHumidity, STNoParent, BSP_HSENSOR_ReadHumidity, 0.0, "Humidity", BSP_HSENSOR_Init, HSENSOR_OK, 0, MS(1000)},
+		{STAccelerometerX, STNoParent, AccelReadX, 0.0,"Accel X", AccelInit, ACCEL_OK, 0, ACCEL_READ_RATE},
+		{STAccelerometerY, STAccelerometerX, AccelReadY, 0.0, "Accel Y", AccelInit, ACCEL_OK, 0, ACCEL_READ_RATE},
+		{STAccelerometerZ, STAccelerometerY, AccelReadZ, 0.0, "Accel Z", AccelInit, ACCEL_OK, 0, ACCEL_READ_RATE},
+		{STGyroscopeX, STNoParent, GyroReadX, 0.0,"Gyro X", GyroInit, GYR_OK, 0, MS(1000)},
+		{STGyroscopeY, STGyroscopeX, GyroReadY, 0.0, "Gyro Y", GyroInit, GYR_OK, 0, MS(1000)},
+		{STGyroscopeZ, STGyroscopeY, GyroReadZ, 0.0, "Gyro Z", GyroInit, GYR_OK, 0, MS(1000)},
 };
 
 void EnableSensor(SensorType_t sensor)
@@ -117,34 +120,54 @@ void SensorInit(SensorType_t sensor)
 
 }
 
-Tick sensor_timer = 0;
 void SensorTask(void)
 {
-	  if (GetTimeSince_ms(sensor_timer) > SENSOR_TIMER_DELAY)
+
+	  for (int i = 0; i < STNumSensors; i++)
 	  {
-		  for (int i = 0; i < STNumSensors; i++)
+		  if ((GetTimeSince_ms(sensors[i].timer) > sensors[i].delay)&&(SensorEnabled((SensorType_t)i)))
 		  {
+			  sensors[i].timer = GetTime_ms();
 			  sensors[i].val = sensors[i].read();
-		  }
-
-		  char msg[2048] = "";
-		  uint16_t msg_index = 0;
-		  for (int i = 0; i < STNumSensors; i++)
-		  {
-			  if (SensorEnabled((SensorType_t)i))
-			  {
-				  msg_index += sprintf(msg+msg_index,"%s: %f\r\n",sensors[i].name,sensors[i].val);
-			  } else
-			  {
-				  //msg_index += sprintf(msg+msg_index,"%s: %s\r\n",sensors[i].name,"Disabled");
-			  }
 
 		  }
-
-		  msg_index += sprintf(msg+msg_index,"\r\n%c",0); // end in a string to terminate debug logging
-		  DebugLog(msg,sizeof(msg));
-		  sensor_timer = GetTime_ms();
 	  }
+
+	  //SensorPrintData();
 }
+
+
+Tick sensor_timer = 0;
+void SensorPrintData(void)
+{
+	if (GetTimeSince_ms(sensor_timer) > SENSOR_TIMER_DELAY)
+	{
+		char msg[2048] = "";
+		uint16_t msg_index = 0;
+		for (int i = 0; i < STNumSensors; i++)
+		{
+		  if (SensorEnabled((SensorType_t)i))
+		  {
+			  msg_index += sprintf(msg+msg_index,"%s: %f\r\n",sensors[i].name,sensors[i].val);
+		  } else
+		  {
+			  //msg_index += sprintf(msg+msg_index,"%s: %s\r\n",sensors[i].name,"Disabled");
+		  }
+
+		}
+
+		msg_index += sprintf(msg+msg_index,"\r\n%c",0); // end in a string to terminate debug logging
+		DebugLog(msg,sizeof(msg));
+		sensor_timer = GetTime_ms();
+	}
+}
+
+float SensorGetData(SensorType_t sensor)
+{
+	return sensors[(uint8_t)sensor].val;
+}
+
+
+
 
 

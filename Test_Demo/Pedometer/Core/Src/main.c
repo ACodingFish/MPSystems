@@ -2,7 +2,7 @@
 /**
  * *****************************************************************************
  * Name: Jonathan Dean
- * Assignment: #2
+ * Pedometer testing
  * Program Summary:
  * This program reads Temperature and Humidity values. When a button is pressed
  * (PC13), the program switches to reading Accelerometer values. When pressed
@@ -31,10 +31,12 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdint.h>
-#include "SensorManager.h"
-#include "Time.h" // Custom Time Library"
-#include "wifi.h"
 #include "DebugUART.h"
+#include "Time.h" // Custom Time Library"
+#include "SensorManager.h"
+#include "Pedometer.h"
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -146,16 +148,17 @@ int main(void)
   }*/
   DebugUARTInit(&huart1); // initialize uart debug readout
 
-  SensorInit(STTemperature);
-  SensorInit(STHumidity);
-  SensorInit(STAccelerometerX);
-  SensorInit(STAccelerometerY);
-  SensorInit(STAccelerometerZ);
+  //SensorInit(STTemperature);
+  //SensorInit(STHumidity);
+  //SensorInit(STAccelerometerX);
+  //SensorInit(STAccelerometerY);
+  //SensorInit(STAccelerometerZ);
   //SensorInit(STGyroscopeX);
   //SensorInit(STGyroscopeY);
   //SensorInit(STGyroscopeZ);
-  EnableSensor(STTemperature);
-  EnableSensor(STHumidity);
+  PedometerInit();
+  //EnableSensor(STTemperature);
+  //EnableSensor(STHumidity);
 
   /* USER CODE END 2 */
 
@@ -168,6 +171,7 @@ int main(void)
     /* USER CODE BEGIN 3 */
 
 	  SensorTask();
+	  PedometerTask();
 
   }
   /* USER CODE END 3 */
@@ -730,14 +734,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		case (1<<13):
 			if (GetTimeSince_ms(button_debounce_time) > BUTTON_DEBOUNCE_TIME_MS) // button debouncing
 			{
-				ToggleSensor(STTemperature);
-				ToggleSensor(STHumidity);
-				ToggleSensor(STAccelerometerX);
-				ToggleSensor(STAccelerometerY);
-				ToggleSensor(STAccelerometerZ);
-				ToggleSensor(STGyroscopeX);
-				ToggleSensor(STGyroscopeY);
-				ToggleSensor(STGyroscopeZ);
 				button_debounce_time = GetTime_ms();
 			}
 
