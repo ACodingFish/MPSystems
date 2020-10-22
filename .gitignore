@@ -7,3 +7,15 @@
 /Project1/*/.project
 /Project1/*/*.elf.launch
 /Project1/*/*.ld
+
+/*/*/Debug/*
+/*/*/Release/*
+/*/*/Drivers/*
+/*/*/.settings/*
+/*/*/startup/*
+/*/*/.cproject
+/*/*/.mxproject
+/*/*/.project
+/*/*/*.elf.launch
+/*/*/*.ld
+
