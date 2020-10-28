@@ -6,13 +6,10 @@
 #include "stm32l475e_iot01_hsensor.h"
 #include "Accel.h"
 #include "Gyro.h"
+#include "MoistureSensor.h"
 #include "Time.h"
+#include "Common.h"
 #include "DebugUART.h"
-
-#define SENSOR_SET_FLAG(mask, x) (mask |= (0x01<<x))
-#define SENSOR_CLR_FLAG(mask, x) (mask &= ~(0x01<<x))
-#define SENSOR_TGL_FLAG(mask, x) (mask ^= (0x01<<x))
-#define SENSOR_CHK_FLAG(mask, x) ((mask & (0x01<<x))>0)
 
 bool SensorEnabled(SensorType_t sensor);
 
@@ -30,7 +27,7 @@ typedef struct Sensor
 	SensorType_t parent;
 	float (*read)(void);
 	float val;
-	char name[10];
+	char name[16];
 	uint32_t (*init)(void);
 	uint32_t INIT_OK;
 } Sensor_t;
@@ -45,36 +42,37 @@ Sensor_t sensors[STNumSensors] =
 		{STGyroscopeX, STNoParent, GyroReadX, 0.0,"Gyro X", GyroInit, GYR_OK},
 		{STGyroscopeY, STGyroscopeX, GyroReadY, 0.0, "Gyro Y", GyroInit, GYR_OK},
 		{STGyroscopeZ, STGyroscopeY, GyroReadZ, 0.0, "Gyro Z", GyroInit, GYR_OK},
+		{STSoilMoisture, STNoParent, MoistureRead, 0.0, "Soil Mois. %", MoistureInit, MOISTURE_OK},
 };
 
 void EnableSensor(SensorType_t sensor)
 {
-	if (SENSOR_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
+	if (FLAG_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
 	{
-		SENSOR_SET_FLAG(SENSOR_MASK, sensor);
+		FLAG_SET_FLAG(SENSOR_MASK, sensor);
 	}
 
 }
 
 void DisableSensor(SensorType_t sensor)
 {
-	if (SENSOR_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
+	if (FLAG_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
 	{
-		SENSOR_CLR_FLAG(SENSOR_MASK, sensor);
+		FLAG_CLR_FLAG(SENSOR_MASK, sensor);
 	}
 }
 
 void ToggleSensor(SensorType_t sensor)
 {
-	if (SENSOR_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
+	if (FLAG_CHK_FLAG(SENSOR_INIT_MASK, sensor) != false)
 	{
-		SENSOR_TGL_FLAG(SENSOR_MASK, sensor);
+		FLAG_TGL_FLAG(SENSOR_MASK, sensor);
 	}
 }
 
 bool SensorEnabled(SensorType_t sensor)
 {
-	return SENSOR_CHK_FLAG(SENSOR_MASK, sensor);
+	return FLAG_CHK_FLAG(SENSOR_MASK, sensor);
 }
 
 void SensorInit(SensorType_t sensor)
@@ -85,30 +83,31 @@ void SensorInit(SensorType_t sensor)
 		case STHumidity:
 		case STAccelerometerX:
 		case STGyroscopeX:
+		case STSoilMoisture:
 			if (sensors[(uint8_t) sensor].init() != sensors[(uint8_t) sensor].INIT_OK)
 			{
 				//sensor failed to initialize
 			} else
 			{
-				SENSOR_SET_FLAG(SENSOR_INIT_MASK, sensor);
+				FLAG_SET_FLAG(SENSOR_INIT_MASK, sensor);
 			}
 			break;
 		case STAccelerometerY:
 		case STAccelerometerZ:
 		case STGyroscopeY:
 		case STGyroscopeZ:
-			if (SENSOR_CHK_FLAG(SENSOR_INIT_MASK, sensors[(uint8_t)sensor].parent) == false)
+			if (FLAG_CHK_FLAG(SENSOR_INIT_MASK, sensors[(uint8_t)sensor].parent) == false)
 			{
 				if (sensors[(uint8_t) sensor].init() != sensors[(uint8_t) sensor].INIT_OK)
 				{
 					//sensor failed to initialize
 				} else
 				{
-					SENSOR_SET_FLAG(SENSOR_INIT_MASK, sensor);
+					FLAG_SET_FLAG(SENSOR_INIT_MASK, sensor);
 				}
 			} else
 			{
-				SENSOR_SET_FLAG(SENSOR_INIT_MASK, sensor);
+				FLAG_SET_FLAG(SENSOR_INIT_MASK, sensor);
 			}
 			break;
 		default:

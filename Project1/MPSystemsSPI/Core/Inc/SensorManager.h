@@ -11,6 +11,7 @@ typedef enum SensorType
 	STGyroscopeX,
 	STGyroscopeY,
 	STGyroscopeZ,
+	STSoilMoisture,
 	STNumSensors,
 	STNoParent,
 } SensorType_t;
