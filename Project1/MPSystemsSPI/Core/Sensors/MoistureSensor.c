@@ -22,3 +22,4 @@ float MoistureRead(void)
 	}
 	return ((moisture_reading - MIN_MOISTURE_VALUE)*100)/(MAX_MOISTURE_VALUE - MIN_MOISTURE_VALUE); // converted from 12 bit to percentage
 }
+
