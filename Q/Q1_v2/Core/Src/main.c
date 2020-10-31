@@ -1,7 +1,14 @@
 /* USER CODE BEGIN Header */
 /**
+ *********************************************************************************
+ *	Author: Jonathan Dean
+ *	Project: Quiz 1 - ToF Sensor
+ *
+ *	Objective: Read the ToF sensor and display it through UART1.
+ *
+ *********************************************************************************
 	******************************************************************************
-	* @file					 : main.c
+	* @file					 	: main.c
 	* @brief					: Main program body
 	******************************************************************************
 	* @attention
@@ -25,6 +32,7 @@
 #include "vl53l0x_api.h"
 #include "vl53l0x_platform.h"
 #include "TOF.h"
+#include "Time.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -126,16 +134,22 @@ int main(void)
 		.I2cHandle = &hi2c2,
 		.I2cDevAddr = 0x52
 	};
-	TOF_Init(tof_device);
 
-	while (1)
+	TOF_Init(tof_device); // initialize the TOF
+
+	Tick tof_timer = GetTime_ms(); // initialize loop timer
+
+	while(1)
 	{
-		char buff[2048];
-		uint16_t buff_sz = 0;
-		uint16_t distance = TOF_GetReading();
-		buff_sz += sprintf(buff, "Val: %d mm\n", distance);
-		HAL_UART_Transmit(&huart1, (uint8_t*)buff, buff_sz, 1000);
-		HAL_Delay(1000);
+		if (GetTimeSince_ms(tof_timer)>MS(1000))
+		{
+			char buff[2048]; // initialize buffer/size counter for uart
+			uint16_t buff_sz = 0;
+			uint16_t distance = TOF_GetReading(); // get TOF datapoint
+			buff_sz += sprintf(buff, "Val: %d mm\n", distance); // write data to a string
+			HAL_UART_Transmit(&huart1, (uint8_t*)buff, buff_sz, 1000); // print data
+			tof_timer = GetTime_ms(); // reset loop timer
+		}
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */

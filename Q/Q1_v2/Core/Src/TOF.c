@@ -36,12 +36,12 @@ void TOF_Init(VL53L0X_Dev_t dev)
 
 uint16_t TOF_GetReading(void)
 {
-	uint16_t distance = 0xFFFF;
-	if (tof_device.Present == 1)
+	uint16_t distance = 0xFFFF; // max distance if error
+	if (tof_device.Present == 1) // if the device is present
 	{
 		VL53L0X_RangingMeasurementData_t tof_data;
 
-		VL53L0X_PerformSingleRangingMeasurement(&tof_device, &tof_data);
+		VL53L0X_PerformSingleRangingMeasurement(&tof_device, &tof_data); // get a single datapoint
 
 		distance = tof_data.RangeMilliMeter;
 
