@@ -1,9 +1,9 @@
 #include <stdbool.h>
 #include "DBG_UART.h"
-#include "WiFiSecrets.h"
 #include "es_wifi.h"
 #include "wifi.h"
 #include "WiFiController.h"
+#include "WiFiSecrets.h"
 
 #define PORT		80
 #define SOCKET		0
