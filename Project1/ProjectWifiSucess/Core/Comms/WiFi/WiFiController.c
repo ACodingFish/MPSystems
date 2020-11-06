@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "DBG_UART.h"
+#include "WiFiSecrets.h"
 #include "es_wifi.h"
 #include "wifi.h"
 #include "WiFiController.h"
