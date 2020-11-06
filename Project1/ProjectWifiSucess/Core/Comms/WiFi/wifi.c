@@ -580,4 +580,14 @@ WIFI_Status_t WIFI_GetModuleName(char *ModuleName)
   }
   return ret;
 }
+
+WIFI_Status_t WIFI_IsConnected(void)
+{
+	WIFI_Status_t ret = WIFI_STATUS_ERROR;
+	if (EsWifiObj.NetSettings.IsConnected == 1)
+	{
+		ret = WIFI_STATUS_OK;
+	}
+	return ret;
+}
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

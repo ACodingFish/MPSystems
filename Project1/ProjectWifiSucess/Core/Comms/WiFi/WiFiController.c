@@ -5,6 +5,7 @@
 #include "WiFiController.h"
 #include "WiFiSecrets.h"
 
+
 #ifdef _WIFI_HTTP_TEST_
 #define PORT		80
 #define SOCKET		0
@@ -213,14 +214,20 @@ static WIFI_Status_t SendWebPage(uint8_t ledIsOn, uint8_t temperature)
 
   return ret;
 }
+
+void WiFiControllerISR(void)
+{
+	SPI_WIFI_ISR();
+}
 #else
 #include <stdlib.h>
+#include "Time.h"
 bool wifi_connected = false;
 #define PORT		10000
 #define SOCKET		0
 static  uint8_t  IP_Addr[4];
-#define WIFI_SEND_TIMEOUT 10000
-#define WIFI_RECV_TIMEOUT 10000
+#define WIFI_SEND_TIMEOUT 5000
+#define WIFI_RECV_TIMEOUT 0
 uint16_t wifi_buff_sz = WIFI_BUFF_SZ;
 uint16_t wifi_data_transferred = 0;
 uint8_t wifi_buff[WIFI_BUFF_SZ];
@@ -291,36 +298,71 @@ int WiFi_Controller_Init(void)
 
 	DBG_LOG(("Server is running and waiting for an TCP Client connection to %d.%d.%d.%d\n",IP_Addr[0],IP_Addr[1],IP_Addr[2],IP_Addr[3]));
 
+	HAL_Delay(50);
 	return 0;
 }
 
-
+#define PING_TEST_TIME MS(15000)
+#define PING_FAILURE_MAX 3
+uint8_t ping_failure_count = 0;
+Tick ping_timer = 0;
 int WiFi_Controller_Task(void)
 {
 
 	if (wifi_connected == false)
 	{
-		while (WIFI_STATUS_OK != WIFI_WaitServerConnection(SOCKET,1000,RemoteIP,&RemotePort))
+		if (WIFI_STATUS_OK != WIFI_WaitServerConnection(SOCKET,1000,RemoteIP,&RemotePort))
 		{
 			DBG_LOG(("Waiting connection to  %d.%d.%d.%d\n",IP_Addr[0],IP_Addr[1],IP_Addr[2],IP_Addr[3]));
 
+		} else
+		{
+			wifi_connected = true;
+			ping_failure_count = 0;
+			ping_timer = GetTime_ms();
+			DBG_LOG(("Client connected %d.%d.%d.%d:%d\n",RemoteIP[0],RemoteIP[1],RemoteIP[2],RemoteIP[3],RemotePort));
 		}
-		wifi_connected = true;
-		DBG_LOG(("Client connected %d.%d.%d.%d:%d\n",RemoteIP[0],RemoteIP[1],RemoteIP[2],RemoteIP[3],RemotePort));
 
 	} else
 	{
-
-		if (WIFI_STATUS_OK == WIFI_ReceiveData(SOCKET, wifi_buff, wifi_buff_sz, &wifi_data_transferred, WIFI_RECV_TIMEOUT))
+		if ((WIFI_IS_CMDDATA_READY()!=false) && (WIFI_IsConnected()==WIFI_STATUS_OK))
 		{
-			if (wifi_data_transferred > 0)
+			if (WIFI_STATUS_OK == WIFI_ReceiveData(SOCKET, wifi_buff, wifi_buff_sz, &wifi_data_transferred, WIFI_RECV_TIMEOUT))
 			{
-				// add command interpreting
-				WiFi_Controller_Cmd(wifi_buff, wifi_data_transferred);
+				if (wifi_data_transferred > 0)
+				{
+					//ping_failure_count = 0;
+					//ping_timer = GetTime_ms();
+					// add command interpreting
+					WiFi_Controller_Cmd(wifi_buff, wifi_data_transferred);
+				}
+			} else
+			{
+				wifi_connected = false;
 			}
-		} else
+		}
+
+		if ((GetTimeSince_ms(ping_timer)>PING_TEST_TIME) && (ping_failure_count < PING_FAILURE_MAX))
+		{
+			// ping
+			uint16_t send_sz = sprintf((char*)wifi_buff,".");
+			if ((WIFI_IsConnected()==WIFI_STATUS_OK)&&(WIFI_SendDataTo(SOCKET, wifi_buff, send_sz, &wifi_data_transferred, WIFI_SEND_TIMEOUT, RemoteIP, RemotePort)==WIFI_STATUS_OK))
+			{
+				ping_failure_count = 0;
+			} else
+			{
+				ping_failure_count++;
+			}
+			ping_timer = GetTime_ms();
+		}
+
+		if (ping_failure_count >= PING_FAILURE_MAX)
 		{
 			wifi_connected = false;
+		}
+
+		if (wifi_connected == false)
+		{
 			if(WIFI_CloseServerConnection(SOCKET) != WIFI_STATUS_OK)
 			{
 				DBG_LOG(("ERROR: failed to close current Server connection\n"));
@@ -380,9 +422,11 @@ void WiFi_Controller_Cmd(uint8_t * cmd, uint16_t cmd_sz)
 		}
 	}
 }
-#endif
+
 void WiFiControllerISR(void)
 {
 	SPI_WIFI_ISR();
 }
+#endif
+
 
