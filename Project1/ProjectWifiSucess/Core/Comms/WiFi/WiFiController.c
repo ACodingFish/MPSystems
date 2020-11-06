@@ -5,8 +5,6 @@
 #include "wifi.h"
 #include "WiFiController.h"
 
-#define SSID		"Test"
-#define PASSWORD 	"letmeinnow"
 #define PORT		80
 #define SOCKET		0
 static  uint8_t http[1024];
