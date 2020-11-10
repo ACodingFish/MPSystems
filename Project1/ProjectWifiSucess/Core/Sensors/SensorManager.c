@@ -124,7 +124,7 @@ void SensorTask(void)
 			  sensors[i].val = sensors[i].read();
 		  }
 
-		  char msg[2048] = "";
+		 /* char msg[2048] = "";
 		  uint16_t msg_index = 0;
 		  for (int i = 0; i < STNumSensors; i++)
 		  {
@@ -140,8 +140,16 @@ void SensorTask(void)
 
 		  msg_index += sprintf(msg+msg_index,"\r\n%c",0); // end in a string to terminate debug logging
 		  DBG_LOG((msg));
-		  sensor_timer = GetTime_ms();
+		  sensor_timer = GetTime_ms();*/
 	  }
 }
 
+
+void SensorsGetData(float* sensor_data)
+{
+	for (int i = 0; i < STNumSensors; i++)
+	{
+		sensor_data[i] = sensors[i].val;
+	}
+}
 

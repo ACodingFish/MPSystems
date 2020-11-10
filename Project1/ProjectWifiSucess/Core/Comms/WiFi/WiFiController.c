@@ -221,6 +221,7 @@ void WiFiControllerISR(void)
 }
 #else
 #include <stdlib.h>
+#include "SensorManager.h"
 #include "Time.h"
 bool wifi_connected = false;
 #define PORT		10000
@@ -345,7 +346,7 @@ int WiFi_Controller_Task(void)
 		if ((GetTimeSince_ms(ping_timer)>PING_TEST_TIME) && (ping_failure_count < PING_FAILURE_MAX))
 		{
 			// ping
-			uint16_t send_sz = sprintf((char*)wifi_buff,".");
+			/*uint16_t send_sz = sprintf((char*)wifi_buff,".");
 			if ((WIFI_IsConnected()==WIFI_STATUS_OK)&&(WIFI_SendDataTo(SOCKET, wifi_buff, send_sz, &wifi_data_transferred, WIFI_SEND_TIMEOUT, RemoteIP, RemotePort)==WIFI_STATUS_OK))
 			{
 				ping_failure_count = 0;
@@ -353,7 +354,7 @@ int WiFi_Controller_Task(void)
 			{
 				ping_failure_count++;
 			}
-			ping_timer = GetTime_ms();
+			ping_timer = GetTime_ms();*/
 		}
 
 		if (ping_failure_count >= PING_FAILURE_MAX)
@@ -388,7 +389,7 @@ typedef enum WiFi_Command
 void WiFi_Controller_Cmd(uint8_t * cmd, uint16_t cmd_sz)
 {
 	uint16_t sync_sz = WIFI_CMD_SYNC_SZ;
-	if (cmd_sz > sync_sz) // if there is a cmd
+	if (cmd_sz > sync_sz-1) // if there is a cmd
 	{
 		for (int i = 0; i < sync_sz-1; i++) // don't check for null byte
 		{
@@ -398,17 +399,21 @@ void WiFi_Controller_Cmd(uint8_t * cmd, uint16_t cmd_sz)
 			}
 		}
 
-
-
 		// if the cmd is valid
 		int command = atoi((char*)cmd+WIFI_CMD_SYNC_SZ-1);
 		uint16_t send_sz = 0;
-
+		float sensors[STNumSensors];
 		switch((WiFi_Command_t)command)
 		{
 			case WFC_GetSensorData:
 				// send sensor data
-				send_sz+= sprintf((char*)wifi_buff, "-- Sending Sensor Data --\n");
+				SensorsGetData(sensors);
+				//send_sz+= sprintf((char*)wifi_buff, "-- Sending Sensor Data --\n");
+				send_sz+= sprintf((char*)wifi_buff, "SEN:");
+				for (int i = 0; i < STNumSensors; i++)
+				{
+					send_sz+= sprintf((char*)wifi_buff + send_sz, "%d,%f-",i,sensors[i]);
+				}
 				break;
 			default:
 				send_sz+= sprintf((char*)wifi_buff, "Invalid Command: %d\n", command);

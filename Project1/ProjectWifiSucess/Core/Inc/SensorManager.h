@@ -21,5 +21,6 @@ void SensorTask(void);
 void EnableSensor(SensorType_t sensor);
 void DisableSensor(SensorType_t sensor);
 void ToggleSensor(SensorType_t sensor);
+void SensorsGetData(float* sensor_data);
 
 #endif //_SENSOR_MANAGER_H_
