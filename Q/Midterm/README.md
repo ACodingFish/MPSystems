@@ -8,3 +8,5 @@
 
 ## Video
 Video can be seen at link: https://www.youtube.com/watch?v=gtuQYGzzIrs
+
+Note that the Temperature in the video is near 30 Degrees Celsius, which is most likely accurate, as the board was significantly warmer than room temperature.
