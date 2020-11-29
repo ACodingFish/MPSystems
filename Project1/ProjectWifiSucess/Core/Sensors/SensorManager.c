@@ -153,3 +153,13 @@ void SensorsGetData(float* sensor_data)
 	}
 }
 
+float SensorGetData(SensorType_t sensor)
+{
+	if (sensor < STNumSensors)
+	{
+		return sensors[(int)sensor].val;
+	} else
+	{
+		return 0.0;
+	}
+}

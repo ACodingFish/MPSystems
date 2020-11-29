@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 
 #include <stdint.h>
+#include "stm32l475e_iot01.h"
 #include "SensorManager.h"
 #include "Time.h" // Custom Time Library"
 #include "ADC.h"
@@ -137,11 +138,26 @@ int main(void)
     EnableSensor(STTemperature);
     EnableSensor(STHumidity);
     EnableSensor(STSoilMoisture);
+    BSP_LED_Init(LED2);
+    BSP_LED_Off(LED2);
+
+#define IRRIGATION_TIME MS(10000)
+    Tick irrigation_timer = GetTime_ms();
   while (1)
   {
 	  WiFi_Controller_Task();
 	  ADC_ReadTask();
 	  SensorTask();
+	  //Alarm code
+	  if (SensorGetData(STSoilMoisture) < 10.0)
+	  {
+		  BSP_LED_On(LED2);
+		  irrigation_timer = GetTime_ms();
+	  } else if (GetTimeSince_ms(irrigation_timer) > IRRIGATION_TIME)// if moisture > X%
+	  {
+		  // moisture fine
+		  BSP_LED_Off(LED2);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
