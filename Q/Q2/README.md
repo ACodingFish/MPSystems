@@ -11,7 +11,7 @@ A sine wave, square wave, and triangle wave can be alternated through using the 
 The waveform is generated on the D13 pin of the arduino header (DAC2)
 
 ## Videos
-Videos can be seen 
+Videos can be seen at: https://youtu.be/87gsWvYdjTY
 
 ## Github Link
 https://github.com/ACodingFish/MPSystems/tree/master/Q/Q2
