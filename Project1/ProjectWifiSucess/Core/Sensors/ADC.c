@@ -20,7 +20,7 @@ void ADC_Init(ADC_HandleTypeDef *hadc, ADCType_t adc_index)
 {
 	ADC_list[adc_index].hadc = hadc;
 	ADC_list[adc_index].val = 0;
-	ADC_list[adc_index].timer = GetTime_ms();
+	ADC_list[adc_index].timer = GetTime_ms(); // initialize ADC Timer
 	HAL_ADC_Start_IT(hadc);
 }
 
@@ -43,9 +43,10 @@ void ADC_ReadTask(void)
 
 uint16_t ADC_Read(uint16_t ADC_index)
 {
-	return ADC_list[ADC_index].val;
+	return ADC_list[ADC_index].val; // get adc reading
 }
 
+// callback for ADC value fetch complete
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
 	for (int i = 0; i < ADC_COUNT; i++)

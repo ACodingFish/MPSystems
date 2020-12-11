@@ -15,6 +15,9 @@
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
+  *
+  * This program is designed as an agricultural sensor measurement/management
+  * system over WiFi.
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
@@ -123,14 +126,17 @@ int main(void)
   MX_SPI3_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
+  // Init commmunication functions (UART/WiFi
   DBG_UART_Init();
   WiFi_Controller_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  	ADC_Init(&hadc1, ADC_MOISTURE);
 
+  	ADC_Init(&hadc1, ADC_MOISTURE);// init ADC
+
+  	// init/enable sensors
     SensorInit(STTemperature);
     SensorInit(STHumidity);
     SensorInit(STSoilMoisture);
@@ -138,25 +144,25 @@ int main(void)
     EnableSensor(STTemperature);
     EnableSensor(STHumidity);
     EnableSensor(STSoilMoisture);
-    BSP_LED_Init(LED2);
+    BSP_LED_Init(LED2); // Init Irrigation Control Alert LED
     BSP_LED_Off(LED2);
 
 #define IRRIGATION_TIME MS(10000)
-    Tick irrigation_timer = GetTime_ms();
+    Tick irrigation_timer = GetTime_ms(); // start irrigation timer
   while (1)
   {
-	  WiFi_Controller_Task();
-	  ADC_ReadTask();
-	  SensorTask();
+	  WiFi_Controller_Task(); // run WiFi controller tasks
+	  ADC_ReadTask(); // Read from ADC
+	  SensorTask(); // Read sensors
 	  //Alarm code
-	  if (SensorGetData(STSoilMoisture) < 10.0)
+	  if (SensorGetData(STSoilMoisture) < 10.0) // if soil moisture is < 10%
 	  {
-		  BSP_LED_On(LED2);
-		  irrigation_timer = GetTime_ms();
-	  } else if (GetTimeSince_ms(irrigation_timer) > IRRIGATION_TIME)// if moisture > X%
+		  BSP_LED_On(LED2); // activate irrigation control
+		  irrigation_timer = GetTime_ms(); // reset timer
+	  } else if (GetTimeSince_ms(irrigation_timer) > IRRIGATION_TIME)// if moisture > X% for Y seconds
 	  {
 		  // moisture fine
-		  BSP_LED_Off(LED2);
+		  BSP_LED_Off(LED2); // turn off irrigation control
 	  }
     /* USER CODE END WHILE */
 

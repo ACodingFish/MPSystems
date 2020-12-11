@@ -14,8 +14,8 @@ bool SensorEnabled(SensorType_t sensor);
 
 #define SENSOR_TIMER_DELAY MS(1000)
 
-uint32_t SENSOR_MASK = 0x0;
-uint32_t SENSOR_INIT_MASK = 0x0;
+uint32_t SENSOR_MASK = 0x0; // is the sensor enabled?
+uint32_t SENSOR_INIT_MASK = 0x0; // is the sensor initialized?
 
 float sensor_val[STNumSensors] = {0};
 
@@ -30,6 +30,8 @@ typedef struct Sensor
 	uint32_t INIT_OK;
 } Sensor_t;
 
+// Sensor array
+// Contains sensor, parent, read function, initial value, name, init function, and OK status
 Sensor_t sensors[STNumSensors] =
 {
 		{STTemperature, STNoParent,BSP_TSENSOR_ReadTemp, 0.0,"Temp", BSP_TSENSOR_Init, TSENSOR_OK},
@@ -42,6 +44,7 @@ Sensor_t sensors[STNumSensors] =
 		//{STGyroscopeZ, STGyroscopeY, GyroReadZ, 0.0, "Gyro Z", GyroInit, GYR_OK},
 		{STSoilMoisture, STNoParent, MoistureRead, 0.0, "Soil Mois. %", MoistureInit, MOISTURE_OK},
 };
+
 
 void EnableSensor(SensorType_t sensor)
 {
@@ -73,6 +76,7 @@ bool SensorEnabled(SensorType_t sensor)
 	return FLAG_CHK_FLAG(SENSOR_MASK, sensor);
 }
 
+// Initializes sensor if not previously initialized by that sensor's parent (ex in the case of Accelerometer Y axis)
 void SensorInit(SensorType_t sensor)
 {
 	switch(sensor)
@@ -121,9 +125,10 @@ void SensorTask(void)
 	  {
 		  for (int i = 0; i < STNumSensors; i++)
 		  {
-			  sensors[i].val = sensors[i].read();
+			  sensors[i].val = sensors[i].read(); // get sensor values
 		  }
 
+		  // Serial Debug readout
 		 /* char msg[2048] = "";
 		  uint16_t msg_index = 0;
 		  for (int i = 0; i < STNumSensors; i++)
@@ -144,7 +149,7 @@ void SensorTask(void)
 	  }
 }
 
-
+// get all sensor data
 void SensorsGetData(float* sensor_data)
 {
 	for (int i = 0; i < STNumSensors; i++)
@@ -153,6 +158,7 @@ void SensorsGetData(float* sensor_data)
 	}
 }
 
+// get specific sensor data
 float SensorGetData(SensorType_t sensor)
 {
 	if (sensor < STNumSensors)

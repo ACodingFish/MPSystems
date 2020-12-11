@@ -309,8 +309,8 @@ uint8_t ping_failure_count = 0;
 Tick ping_timer = 0;
 int WiFi_Controller_Task(void)
 {
-
-	if (wifi_connected == false)
+ // Below is modified http server code example into a socket server example.
+	if (wifi_connected == false) // if unconnected, try to connect
 	{
 		if (WIFI_STATUS_OK != WIFI_WaitServerConnection(SOCKET,1000,RemoteIP,&RemotePort))
 		{
@@ -324,7 +324,7 @@ int WiFi_Controller_Task(void)
 			DBG_LOG(("Client connected %d.%d.%d.%d:%d\n",RemoteIP[0],RemoteIP[1],RemoteIP[2],RemoteIP[3],RemotePort));
 		}
 
-	} else
+	} else // if connected, process commands
 	{
 		if ((WIFI_IS_CMDDATA_READY()!=false) && (WIFI_IsConnected()==WIFI_STATUS_OK))
 		{
@@ -335,7 +335,7 @@ int WiFi_Controller_Task(void)
 					//ping_failure_count = 0;
 					//ping_timer = GetTime_ms();
 					// add command interpreting
-					WiFi_Controller_Cmd(wifi_buff, wifi_data_transferred);
+					WiFi_Controller_Cmd(wifi_buff, wifi_data_transferred); // process commands
 				}
 			} else
 			{
@@ -362,7 +362,7 @@ int WiFi_Controller_Task(void)
 			wifi_connected = false;
 		}
 
-		if (wifi_connected == false)
+		if (wifi_connected == false) // if communication failure has been detected, reset connection
 		{
 			if(WIFI_CloseServerConnection(SOCKET) != WIFI_STATUS_OK)
 			{
@@ -381,6 +381,7 @@ int WiFi_Controller_Task(void)
 	return 0;
 }
 
+// command list
 typedef enum WiFi_Command
 {
 	WFC_GetSensorData,
@@ -412,7 +413,7 @@ void WiFi_Controller_Cmd(uint8_t * cmd, uint16_t cmd_sz)
 				send_sz+= sprintf((char*)wifi_buff, "SEN:");
 				for (int i = 0; i < STNumSensors; i++)
 				{
-					send_sz+= sprintf((char*)wifi_buff + send_sz, "%d,%f-",i,sensors[i]);
+					send_sz+= sprintf((char*)wifi_buff + send_sz, "%d,%f$",i,sensors[i]);
 				}
 				break;
 			default:
